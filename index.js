@@ -486,15 +486,9 @@ app.post("/:userId/uploadFile", commnMid.jwtValidation, commnMid.authorization, 
 
         data.excel_sheet = `/file/${file.filename}`;
         data.userId = userid;
-       
-        var file2 = xlsx.readFile(`./Files/file/${file.filename}`);
-       
-        var sheetNames = file2.SheetNames[0];
-        
-        var sheetValue = file2.Sheets[sheetNames]
-        let arr2 = xlsx.utils.sheet_to_json(sheetValue)
-        data.excel_sheet = arr2;
 
+        var file2 = xlsx.readFile(`./Files/file/${file.filename}`);
+        
         const ExcelSheetCreated = await uploadExcelSheet.create(data);
 
         return res.status(201).send({

@@ -1,4 +1,3 @@
-// const moment = require('moment');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const tagModel = require("../Models/tagModel");
@@ -16,6 +15,7 @@ const readinessSurveyModel = require("../Models/readinessSurvey");
 const strengthTestModel = require("../Models/strength_testModel");
 const academy_coachModel = require('../Models/academy_coachModel');
 const recommendationModel = require("../Models/recommendationModel");
+const academyProfile = require("../Models/academyProfile");
 
 //==========================[user register]==============================
 const createUser = async function (req, res) {
@@ -67,6 +67,8 @@ const userLogin = async function (req, res) {
         let type = UserProfile ? "Yes" : "No";
         user.user_details_submit = type;
 
+
+
         let token = jwt.sign({
             userId: user._id,
         }, "project")
@@ -82,14 +84,13 @@ const userLogin = async function (req, res) {
                 name: user.name,
                 phone: user.phone,
                 join_as: user.join_as,
-                signup_as: user.signup_as,
                 email: user.email,
                 password: user.password,
-                academy_name: user.academy_name,
+                signup_as: user.signup_as,
                 user_details_submit: user.user_details_submit,
+                userProfile: UserProfile,
                 userQuestion: user.userQuestion,
                 token: token,
-                userProfile: UserProfile
             }
         })
     }
@@ -358,7 +359,16 @@ const createRoutine = async function (req, res) {
         }
 
         let createRoutine = await routineModel.create(data);
-        return res.status(201).send({ message: "Routine set successfully", data: createRoutine })
+
+        return res.status(201).send({
+            message: "Routine set successfully",
+            data: {
+                drills : createRoutine.drills,
+                date : createRoutine.date,
+                time : createRoutine.time,
+                routineId : createRoutine._id,
+            }
+        })
 
     }
     catch (error) {
@@ -390,6 +400,24 @@ const getRoutine = async function (req, res) {
         })
     }
 };
+//=======================================================
+
+const deleteRoutine = async function (req, res) {
+    try {
+        let routineId = req.query.routineId;
+
+        let updateRoutine = await routineModel.findByIdAndDelete({ _id: routineId})
+
+        res.status(200).send({ status: true, message: 'sucessfully deleted' })
+
+    }
+    catch (error) {
+        return res.status(500).send({
+            status: false,
+            message: error.message
+        })
+    }
+}
 //======================================================================
 const getMyDrills = async function (req, res) {
     try {
@@ -546,32 +574,32 @@ const getPastDrill = async function (req, res) {
     try {
         let data = req.query;
         let userid = req.params.userId;
-        
+
         let { category, title } = data;
-        
+
         let filter = {}
-        
+
         if (category) {
             filter.category = category;
         }
         if (title) {
             filter.title = title;
         }
-        
+
         const drills = await myDrillModel.find({ userId: userid, isCompleted: true, $or: [data, filter] }).select({ createdAt: 0, updatedAt: 0, __v: 0 });
-        
+
         let lastIndex = drills.length - 1;
         let lastObject = drills[lastIndex];
-        
+
         let arr = [];
-        
+
         for (var i = 0; i < drills.length; i++) {
             data.videoId = drills[i]._id
             arr.push(data.videoId)
         }
-        
+
         let Allrecommendations = await recommendationModel.find().select({ anecdote_no: 1, message: 1, audioFile: 1, audiolength: 1, manual: 1, createdAt: 1 });
-        
+
         let obj = [{
             _id: lastObject._id,
             title: lastObject.title,
@@ -583,7 +611,7 @@ const getPastDrill = async function (req, res) {
             isCompleted: lastObject.isCompleted,
             recommendation: Allrecommendations
         }]
-        
+
         return res.status(200).send({
             status: true,
             message: "success",
@@ -620,7 +648,6 @@ const createAcademy = async function (req, res) {
         res.status(500).send({ status: false, error: err.message })
     }
 };
-
 //==========================[user login]==============================
 
 const AcademyLogin = async function (req, res) {
@@ -647,14 +674,24 @@ const AcademyLogin = async function (req, res) {
 
         let token = jwt.sign({
             userId: academy._id,
-        }, "project")
+        }, "project");
+
+        let AcademyProfile = await academyProfile.findOne({ userId: academy._id }).select({ _id: 0, createdAt: 0, updatedAt: 0, __v: 0 });
+        let type2 = AcademyProfile ? true : false;
+        academy.academy_details_submit = type2;
 
         return res.status(200).send({
             status: true,
             msg: "User login successfull",
             data: {
                 userId: academy._id,
+                phone: academy.phone,
+                join_as: academy.join_as,
+                email: academy.email,
+                password: academy.password,
+                academy_details_submit: academy.academy_details_submit,
                 token: token,
+                userProfile: AcademyProfile
             }
         })
     }
@@ -667,5 +704,6 @@ const AcademyLogin = async function (req, res) {
 };
 // =============================================================================
 
-module.exports = { createUser, userLogin, getContact, createBattings, createBowlings, createWickets, bow_bat, createRoutine, getRoutine, category, getCategory, getTags, tag, getMyDrills, readinessSurvey, createPowerTest, createStrengthTest, createAcademy, AcademyLogin, updateDrill, updatePassword, getPastDrill }
+
+module.exports = { AcademyLogin, createUser, userLogin, getContact, createBattings, createBowlings, createWickets, bow_bat, createRoutine, deleteRoutine, getRoutine, category, getCategory, getTags, tag, getMyDrills, readinessSurvey, createPowerTest, createStrengthTest, createAcademy, updateDrill, updatePassword, getPastDrill }
 

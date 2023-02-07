@@ -13,6 +13,7 @@ Router.post("/:userId/bowling", commnMid.jwtValidation, commnMid.authorization, 
 Router.post("/:userId/wicketKeeping", commnMid.jwtValidation, commnMid.authorization, battingController.createWickets)
 Router.post("/:userId/postDrills", commnMid.jwtValidation, commnMid.authorization, battingController.createRoutine)
 Router.get("/:userId/getRoutine", commnMid.jwtValidation, commnMid.authorization, battingController.getRoutine)
+Router.delete("/:userId/deleteRoutine", commnMid.jwtValidation, commnMid.authorization, battingController.deleteRoutine)
 Router.post("/category", battingController.category)
 Router.get("/:userId/Categoy", commnMid.jwtValidation, commnMid.authorization, battingController.getCategory)
 Router.post("/tag", battingController.tag)
